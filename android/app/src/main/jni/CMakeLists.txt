@@ -1,0 +1,72 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(stockapp)
+
+# Paths injected by build.gradle (read from android/local.properties or env vars).
+# OTP_BUILD, OTP_RELEASE, ERTS_VSN, MOB_DIR are set via -D flags.
+
+# Project root is 5 directories above this CMakeLists.txt
+# (android/app/src/main/jni → ../../../../../). Used to locate deps/.
+set(MOB_DEPS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../deps")
+
+add_library(stockapp SHARED
+    beam_jni.c
+    ${MOB_DIR}/android/jni/mob_nif.c
+    ${MOB_DIR}/android/jni/mob_beam.c
+    ${MOB_DIR}/android/jni/driver_tab_android.c
+)
+
+target_include_directories(stockapp PRIVATE
+    ${MOB_DIR}/android/jni
+    ${OTP_RELEASE}/${ERTS_VSN}/include
+)
+
+target_compile_definitions(stockapp PRIVATE STATIC_ERLANG_NIF)
+
+target_link_libraries(stockapp
+    PRIVATE
+    -Wl,--allow-multiple-definition
+    -Wl,--whole-archive
+    ${OTP_RELEASE}/${ERTS_VSN}/lib/libbeam.a
+    ${OTP_RELEASE}/${ERTS_VSN}/lib/internal/liberts_internal_r.a
+    ${OTP_RELEASE}/${ERTS_VSN}/lib/internal/libethread.a
+    ${OTP_RELEASE}/${ERTS_VSN}/lib/libzstd.a
+    ${OTP_RELEASE}/${ERTS_VSN}/lib/libepcre.a
+    ${OTP_RELEASE}/${ERTS_VSN}/lib/libryu.a
+    ${OTP_RELEASE}/${ERTS_VSN}/lib/asn1rt_nif.a
+    -Wl,--no-whole-archive
+    android
+    log
+    z
+    c++_static
+)
+
+# ── exqlite / SQLite NIF ──────────────────────────────────────────────────────
+# Compiles exqlite's C extension as a separate shared library so the APK
+# packages it in jniLibs/ with the apk_data_file SELinux label, which allows
+# dlopen() from an untrusted_app process. mob_beam.c creates a symlink at
+# <beams_dir>/priv/sqlite3_nif.so → <nativeLibraryDir>/libsqlite3_nif.so
+# before erl_start, so :erlang.load_nif/2 (called from exqlite's on_load)
+# resolves to the correct path via :code.priv_dir(:exqlite).
+#
+# TODO: elixir_make could gain Android/iOS cross-compilation support to make
+# this step automatic — Nerves has already established precedent. If that lands,
+# this target can be removed and elixir_make will handle it.
+add_library(sqlite3_nif SHARED
+    ${MOB_DEPS_DIR}/exqlite/c_src/sqlite3_nif.c
+    ${MOB_DEPS_DIR}/exqlite/c_src/sqlite3.c
+)
+
+target_include_directories(sqlite3_nif PRIVATE
+    ${MOB_DEPS_DIR}/exqlite/c_src
+    ${OTP_RELEASE}/${ERTS_VSN}/include
+)
+
+target_compile_definitions(sqlite3_nif PRIVATE
+    SQLITE_THREADSAFE=1
+)
+
+target_link_libraries(sqlite3_nif
+    stockapp
+    android
+    log
+)

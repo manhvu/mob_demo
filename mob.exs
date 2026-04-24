@@ -1,0 +1,15 @@
+# mob.exs — Mob build environment configuration.
+# Set these paths for your machine. Not committed to version control.
+# (Add mob.exs to .gitignore if you share this project.)
+#
+# OTP runtimes for Android and iOS are downloaded automatically by `mix mob.install`.
+
+import Config
+
+config :mob_dev,
+  # Path to the mob library repo (native source files for iOS/Android builds).
+  mob_dir: Path.join(File.cwd!(), "deps/mob"),
+  bundle_id: "com.mob.stock_app",
+
+  # Path to your Elixir lib dir (e.g. ~/.local/share/mise/installs/elixir/1.18.4-otp-28/lib).
+  elixir_lib: System.get_env("MOB_ELIXIR_LIB", System.get_env("HOME") <> "/.local/share/mise/installs/elixir/1.18.4-otp-28/lib")

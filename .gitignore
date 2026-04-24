@@ -1,0 +1,48 @@
+
+
+# The directory Mix will write compiled artifacts to.
+/_build/
+
+# If you run "mix test --cover", coverage assets end up here.
+/cover/
+
+# The directory Mix downloads your dependencies sources to.
+/deps/
+
+# Where 3rd-party dependencies like ExDoc output generated docs.
+/doc/
+
+# Ignore .fetch files in case you like to edit your project deps locally.
+/.fetch
+
+# If the VM crashes, it generates a dump, let's ignore it too.
+erl_crash.dump
+
+# Also ignore archive artifacts (built via "mix archive.build").
+*.ez
+
+# Temporary files, for example, from tests.
+/tmp
+
+# npm ignore
+/node_modules
+
+package-lock.json
+
+# Ignore Mac system files
+.DS_Store
+
+.elixir_ls/
+
+int_deps/
+.tool-versions
+.env
+.expert/
+.dexter.db*
+**/.cxx
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/app/build
